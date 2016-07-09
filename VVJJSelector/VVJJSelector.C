@@ -490,9 +490,12 @@ Bool_t VVJJSelector::Process(Long64_t entry)
         second_jet_ungNtrk = jet1_ungrtrk500;
     }
 
-    /**********************************/
-    /* DETERMINE EVENT/JET TOPOLOGIES */
-    /**********************************/
+    const bool first_jet_passedNtrk = first_jet_ungNtrk < 30;
+    const bool second_jet_passedNtrk = second_jet_ungNtrk < 30;
+
+    /***************************************/
+    /* DETERMINE EVENT/JET TOPOLOGIES/TAGS */
+    /***************************************/
 
     JetTopo first_jet_topo;
     JetTopo second_jet_topo;
@@ -531,57 +534,62 @@ Bool_t VVJJSelector::Process(Long64_t entry)
         sum_weights_gg += full_weight;
     }
 
-    const bool first_jet_passed_ntrk = first_jet_ungNtrk < 30;
-    const bool second_jet_passed_ntrk = second_jet_ungNtrk < 30;
+    first_jet_tag_map["partial_ntrk"]       = first_jet_passedNtrk;
+    first_jet_tag_map["W_partial_mass"]     = first_jet_passedWMassCut;
+    first_jet_tag_map["W_partial_D2"]       = first_jet_passedWSubstructure;
+    first_jet_tag_map["W_partial_massD2"]   = first_jet_passedWSubstructure  && first_jet_passedWMassCut;
+    first_jet_tag_map["W_partial_massNtrk"] = first_jet_passedWMassCut       && first_jet_passedNtrk;
+    first_jet_tag_map["W_partial_ntrkD2"]   = first_jet_passedWSubstructure  && first_jet_passedNtrk;
+    first_jet_tag_map["W_full"]             = first_jet_passedWSubstructure  && first_jet_passedWMassCut  && first_jet_passedNtrk;
 
-    const bool first_jet_passed_W_partial_massD2   = first_jet_passedWSubstructure     && first_jet_passedWMassCut;
-    const bool first_jet_passed_W_partial_massNtrk = first_jet_passedWMassCut          && first_jet_passed_ntrk;
-    const bool first_jet_passed_W_partial_ntrkD2   = first_jet_passedWSubstructure     && first_jet_passed_ntrk;
-    const bool first_jet_passed_W_full             = first_jet_passed_W_partial_massD2 && first_jet_passed_ntrk;
+    first_jet_tag_map["Z_partial_mass"]     = first_jet_passedZMassCut;
+    first_jet_tag_map["Z_partial_D2"]       = first_jet_passedZSubstructure;
+    first_jet_tag_map["Z_partial_massD2"]   = first_jet_passedZSubstructure  && first_jet_passedZMassCut;
+    first_jet_tag_map["Z_partial_massNtrk"] = first_jet_passedZMassCut       && first_jet_passedNtrk;
+    first_jet_tag_map["Z_partial_ntrkD2"]   = first_jet_passedZSubstructure  && first_jet_passedNtrk;
+    first_jet_tag_map["Z_full"]             = first_jet_passedZSubstructure  && first_jet_passedZMassCut  && first_jet_passedNtrk;
 
-    const bool first_jet_passed_Z_partial_massD2   = first_jet_passedZSubstructure     && first_jet_passedZMassCut;
-    const bool first_jet_passed_Z_partial_massNtrk = first_jet_passedZMassCut          && first_jet_passed_ntrk;
-    const bool first_jet_passed_Z_partial_ntrkD2   = first_jet_passedZSubstructure     && first_jet_passed_ntrk;
-    const bool first_jet_passed_Z_full             = first_jet_passed_Z_partial_massD2 && first_jet_passed_ntrk;
+    second_jet_tag_map["partial_ntrk"]       = second_jet_passedNtrk;
+    second_jet_tag_map["W_partial_mass"]     = second_jet_passedWMassCut;
+    second_jet_tag_map["W_partial_D2"]       = second_jet_passedWSubstructure;
+    second_jet_tag_map["W_partial_massD2"]   = second_jet_passedWSubstructure  && second_jet_passedWMassCut;
+    second_jet_tag_map["W_partial_massNtrk"] = second_jet_passedWMassCut       && second_jet_passedNtrk;
+    second_jet_tag_map["W_partial_ntrkD2"]   = second_jet_passedWSubstructure  && second_jet_passedNtrk;
+    second_jet_tag_map["W_full"]             = second_jet_passedWSubstructure  && second_jet_passedWMassCut  && second_jet_passedNtrk;
 
-    const bool second_jet_passed_W_partial_massD2   = second_jet_passedWSubstructure     && second_jet_passedWMassCut;
-    const bool second_jet_passed_W_partial_massNtrk = second_jet_passedWMassCut          && second_jet_passed_ntrk;
-    const bool second_jet_passed_W_partial_ntrkD2   = second_jet_passedWSubstructure     && second_jet_passed_ntrk;
-    const bool second_jet_passed_W_full             = second_jet_passed_W_partial_massD2 && second_jet_passed_ntrk;
+    second_jet_tag_map["Z_partial_mass"]     = second_jet_passedZMassCut;
+    second_jet_tag_map["Z_partial_D2"]       = second_jet_passedZSubstructure;
+    second_jet_tag_map["Z_partial_massD2"]   = second_jet_passedZSubstructure  && second_jet_passedZMassCut;
+    second_jet_tag_map["Z_partial_massNtrk"] = second_jet_passedZMassCut       && second_jet_passedNtrk;
+    second_jet_tag_map["Z_partial_ntrkD2"]   = second_jet_passedZSubstructure  && second_jet_passedNtrk;
+    second_jet_tag_map["Z_full"]             = second_jet_passedZSubstructure  && second_jet_passedZMassCut  && second_jet_passedNtrk;
 
-    const bool second_jet_passed_Z_partial_massD2   = second_jet_passedZSubstructure     && second_jet_passedZMassCut;
-    const bool second_jet_passed_Z_partial_massNtrk = second_jet_passedZMassCut          && second_jet_passed_ntrk;
-    const bool second_jet_passed_Z_partial_ntrkD2   = second_jet_passedZSubstructure     && second_jet_passed_ntrk;
-    const bool second_jet_passed_Z_full             = second_jet_passed_Z_partial_massD2 && second_jet_passed_ntrk;
+    event_tag_map["partial_ntrk"] = first_jet_passedNtrk && second_jet_passedNtrk;
 
-    const bool event_passed_WW_full = first_jet_passed_W_full && second_jet_passed_W_full;
-    const bool event_passed_WZ_full = first_jet_passed_Z_full && second_jet_passed_W_full;
-    const bool event_passed_ZZ_full = first_jet_passed_Z_full && second_jet_passed_Z_full;
+    event_tag_map["WW_partial_mass"]     = first_jet_tag_map["W_partial_mass"]     && second_jet_tag_map["W_partial_mass"];
+    event_tag_map["WW_partial_D2"]       = first_jet_tag_map["W_partial_D2"]       && second_jet_tag_map["W_partial_D2"];
+    event_tag_map["WW_partial_massD2"]   = first_jet_tag_map["W_partial_massD2"]   && second_jet_tag_map["W_partial_massD2"];
+    event_tag_map["WW_partial_massNtrk"] = first_jet_tag_map["W_partial_massNtrk"] && second_jet_tag_map["W_partial_massNtrk"];
+    event_tag_map["WW_partial_ntrkD2"]   = first_jet_tag_map["W_partial_ntrkD2"]   && second_jet_tag_map["W_partial_ntrkD2"];
+    event_tag_map["WW_full"]             = first_jet_tag_map["W_full"]             && second_jet_tag_map["W_full"];
 
-    const bool event_passed_partial_ntrk = first_jet_passed_ntrk && second_jet_passed_ntrk;
+    event_tag_map["WZ_partial_mass"]     = first_jet_tag_map["Z_partial_mass"]     && second_jet_tag_map["W_partial_mass"];
+    event_tag_map["WZ_partial_D2"]       = first_jet_tag_map["Z_partial_D2"]       && second_jet_tag_map["W_partial_D2"];
+    event_tag_map["WZ_partial_massD2"]   = first_jet_tag_map["Z_partial_massD2"]   && second_jet_tag_map["W_partial_massD2"];
+    event_tag_map["WZ_partial_massNtrk"] = first_jet_tag_map["Z_partial_massNtrk"] && second_jet_tag_map["W_partial_massNtrk"];
+    event_tag_map["WZ_partial_ntrkD2"]   = first_jet_tag_map["Z_partial_ntrkD2"]   && second_jet_tag_map["W_partial_ntrkD2"];
+    event_tag_map["WZ_full"]             = first_jet_tag_map["Z_full"]             && second_jet_tag_map["W_full"];
 
-    const bool event_passed_WW_partial_mass     = first_jet_passedWMassCut            && second_jet_passedWMassCut;
-    const bool event_passed_WW_partial_D2       = first_jet_passedWSubstructure       && second_jet_passedWSubstructure;
-    const bool event_passed_WW_partial_massD2   = first_jet_passed_W_partial_massD2   && second_jet_passed_W_partial_massD2;
-    const bool event_passed_WW_partial_massNtrk = first_jet_passed_W_partial_massNtrk && second_jet_passed_W_partial_massNtrk;
-    const bool event_passed_WW_partial_ntrkD2   = first_jet_passed_W_partial_ntrkD2   && second_jet_passed_W_partial_ntrkD2;
+    event_tag_map["ZZ_partial_mass"]     = first_jet_tag_map["Z_partial_mass"]     && second_jet_tag_map["Z_partial_mass"];
+    event_tag_map["ZZ_partial_D2"]       = first_jet_tag_map["Z_partial_D2"]       && second_jet_tag_map["Z_partial_D2"];
+    event_tag_map["ZZ_partial_massD2"]   = first_jet_tag_map["Z_partial_massD2"]   && second_jet_tag_map["Z_partial_massD2"];
+    event_tag_map["ZZ_partial_massNtrk"] = first_jet_tag_map["Z_partial_massNtrk"] && second_jet_tag_map["Z_partial_massNtrk"];
+    event_tag_map["ZZ_partial_ntrkD2"]   = first_jet_tag_map["Z_partial_ntrkD2"]   && second_jet_tag_map["Z_partial_ntrkD2"];
+    event_tag_map["ZZ_full"]             = first_jet_tag_map["Z_full"]             && second_jet_tag_map["Z_full"];
 
-    const bool event_passed_ZZ_partial_mass     = first_jet_passedZMassCut            && second_jet_passedZMassCut;
-    const bool event_passed_ZZ_partial_D2       = first_jet_passedZSubstructure       && second_jet_passedZSubstructure;
-    const bool event_passed_ZZ_partial_massD2   = first_jet_passed_Z_partial_massD2   && second_jet_passed_Z_partial_massD2;
-    const bool event_passed_ZZ_partial_massNtrk = first_jet_passed_Z_partial_massNtrk && second_jet_passed_Z_partial_massNtrk;
-    const bool event_passed_ZZ_partial_ntrkD2   = first_jet_passed_Z_partial_ntrkD2   && second_jet_passed_Z_partial_ntrkD2;
-
-    const bool event_passed_WZ_partial_mass     = first_jet_passedZMassCut            && second_jet_passedWMassCut;
-    const bool event_passed_WZ_partial_D2       = first_jet_passedZSubstructure       && second_jet_passedWSubstructure;
-    const bool event_passed_WZ_partial_massD2   = first_jet_passed_Z_partial_massD2   && second_jet_passed_W_partial_massD2;
-    const bool event_passed_WZ_partial_massNtrk = first_jet_passed_Z_partial_massNtrk && second_jet_passed_W_partial_massNtrk;
-    const bool event_passed_WZ_partial_ntrkD2   = first_jet_passed_Z_partial_ntrkD2   && second_jet_passed_W_partial_ntrkD2;
-
-    /*******************/
-    /* FILL HISTOGRAMS */
-    /*******************/
-
+    /****************************/
+    /* FILL UNTAGGED HISTOGRAMS */
+    /****************************/
 
     h_dijet_mass->fill_inclusive(dijet_mass_massordered / 1000. , full_weight);
     h_dijet_mass->fill_event_topo(event_topo, dijet_mass_massordered / 1000. , full_weight);
@@ -638,108 +646,19 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     /* FILL TAGGED HISTOGRAMS */
     /**************************/
 
-    // all dijet mass event topo variations
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_full", event_passed_WW_full,
-            dijet_mass_massordered / 1000., full_weight);
+    for (auto const& tag : event_tag_map) {
+        h_dijet_mass->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
+        h_first_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
+        h_second_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
+    }
 
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_full", event_passed_WZ_full,
-            dijet_mass_massordered / 1000., full_weight);
+    for (auto const& tag : first_jet_tag_map) {
+        h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, tag.first, tag.second, first_jet_pt / 1000., full_weight);
+    }
 
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_full", event_passed_ZZ_full,
-            dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "partial_ntrk",
-            event_passed_partial_ntrk, dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_partial_mass",
-            event_passed_WW_partial_mass, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_partial_mass",
-            event_passed_WZ_partial_mass, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_partial_mass",
-            event_passed_ZZ_partial_mass, dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_partial_D2",
-            event_passed_WW_partial_D2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_partial_D2",
-            event_passed_WZ_partial_D2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_partial_D2",
-            event_passed_ZZ_partial_D2, dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_partial_massD2",
-            event_passed_WW_partial_massD2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_partial_massD2",
-            event_passed_WZ_partial_massD2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_partial_massD2",
-            event_passed_ZZ_partial_massD2, dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_partial_massNtrk",
-            event_passed_WW_partial_massNtrk, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_partial_massNtrk",
-            event_passed_WZ_partial_massNtrk, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_partial_massNtrk",
-            event_passed_ZZ_partial_massNtrk, dijet_mass_massordered / 1000., full_weight);
-
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WW_partial_ntrkD2",
-            event_passed_WW_partial_ntrkD2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "WZ_partial_ntrkD2",
-            event_passed_WZ_partial_ntrkD2, dijet_mass_massordered / 1000., full_weight);
-    h_dijet_mass->fill_event_topo_tagged(event_topo, "ZZ_partial_ntrkD2",
-            event_passed_ZZ_partial_ntrkD2, dijet_mass_massordered / 1000., full_weight);
-
-    // jet pT
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "partial_ntrk",
-            first_jet_passed_ntrk, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "W_partial_mass",
-            first_jet_passedWMassCut, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "Z_partial_mass",
-            first_jet_passedZMassCut, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "W_partial_D2",
-            first_jet_passedWSubstructure, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "Z_partial_D2",
-            first_jet_passedZSubstructure, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "W_partial_massD2",
-            first_jet_passed_W_partial_massD2, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "Z_partial_massD2",
-            first_jet_passed_Z_partial_massD2, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "W_full",
-            first_jet_passed_W_full, first_jet_pt / 1000., full_weight);
-
-    h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, "Z_full",
-            first_jet_passed_Z_full, first_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "partial_ntrk",
-            second_jet_passed_ntrk, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "W_partial_mass",
-            second_jet_passedWMassCut, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "Z_partial_mass",
-            second_jet_passedZMassCut, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "W_partial_D2",
-            second_jet_passedWSubstructure, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "Z_partial_D2",
-            second_jet_passedZSubstructure, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "W_partial_massD2",
-            second_jet_passed_W_partial_massD2, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "Z_partial_massD2",
-            second_jet_passed_Z_partial_massD2, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "W_full",
-            second_jet_passed_W_full, second_jet_pt / 1000., full_weight);
-
-    h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, "Z_full",
-            second_jet_passed_Z_full, second_jet_pt / 1000., full_weight);
+    for (auto const& tag : second_jet_tag_map) {
+        h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, tag.first, tag.second, second_jet_pt / 1000., full_weight);
+    }
 
     return kTRUE;
 }

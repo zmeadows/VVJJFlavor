@@ -88,6 +88,10 @@ class VVJJSelector : public TSelector {
 
         Double_t sum_weights_non_quark_gluon_rejections;
 
+        std::unordered_map<std::string, bool> event_tag_map;
+        std::unordered_map<std::string, bool> first_jet_tag_map;
+        std::unordered_map<std::string, bool> second_jet_tag_map;
+
         std::unique_ptr<TH1Topo> h_first_jet_pt;
         std::unique_ptr<TH1Topo> h_first_jet_eta;
         std::unique_ptr<TH1Topo> h_first_jet_phi;
