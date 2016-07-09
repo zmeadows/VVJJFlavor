@@ -308,6 +308,7 @@ void RunVVJJSelector(std::string input_path, std::string output_path)
         }
 
         // add each ntuple path to the corresponding TChain
+        std::cout << std::endl << "### Loading files: " << ntuple_gen << " ###" << std::endl;
         for (auto const& path : ntuple_paths) {
             ret_code = tchains[ntuple_gen]->Add(path.c_str(), 0);
 
@@ -318,6 +319,7 @@ void RunVVJJSelector(std::string input_path, std::string output_path)
                 std::cout << "\t" + path << " FOUND." << std::endl;
             }
         }
+        std::cout << std::endl;
     }
 
     // now actually process the TChains (i.e. ntuples) with the VVJJSelector
@@ -334,12 +336,17 @@ void RunVVJJSelector(std::string input_path, std::string output_path)
     }
 }
 
-
 VVJJSelector::VVJJSelector(std::string output_path_) :
     fChain(0),
     output_path(output_path_),
-    num_events_total(0),
-    num_events_baseline_selection(0)
+    num_entries_processed(0),
+    next_print_percent(0.0),
+    sum_weights_total(0),
+    sum_weights_baseline_selection(0),
+    sum_weights_qq(0),
+    sum_weights_qg(0),
+    sum_weights_gg(0),
+    sum_weights_non_quark_gluon_rejections(0)
 { }
 
 void VVJJSelector::Begin(TTree * /*tree*/)
@@ -363,6 +370,7 @@ void VVJJSelector::Begin(TTree * /*tree*/)
     h_second_jet_ungNtrk = make_unique<TH1Topo>("second_jet_ntrk" , 0.   , 100.  , 2.0);
 
     h_dijet_mass = make_unique<TH1Topo>("dijet_mass" , 0. , 8000. , 100);
+
 
     TString option = GetOption();
 }
@@ -396,6 +404,20 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     // Use fStatus to set the return value of TTree::Process().
     //
     // The return value is currently not used.
+
+    num_entries_processed++;
+
+    double percent_done = 100 * (float) num_entries_processed / (float) this->fChain->GetEntries();
+    if (percent_done >= next_print_percent) {
+        std::cout << next_print_percent << "%..." << std::flush;
+
+        if (percent_done == 100.0) {
+            std::cout << "DONE." << std::endl;
+        } else {
+            next_print_percent += 10.0;
+        }
+    }
+
 
     b_weight->GetEntry(entry);
     b_pileup_weight->GetEntry(entry);
@@ -434,11 +456,13 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     b_jet1_ungrtrk500->GetEntry(entry);
     b_jet2_ungrtrk500->GetEntry(entry);
 
+    const float full_weight = weight * pileup_weight;
+
     /****************************/
     /* BASELINE EVENT SELECTION */
     /****************************/
 
-    num_events_total++;
+    sum_weights_total += full_weight;
 
     if (first_jet_pt / 1000. <= 450
             || first_jet_m / 1000. <= 50
@@ -450,7 +474,7 @@ Bool_t VVJJSelector::Process(Long64_t entry)
             || ptasym >= 0.15
             ) return kFALSE;
 
-    num_events_baseline_selection++;
+    sum_weights_baseline_selection += full_weight;
 
     /***************************/
     /* COMPUTE EXTRA VARIABLES */
@@ -479,6 +503,7 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     } else if (first_jet_pdgid == 21) {
         first_jet_topo = JetTopo::Gluon;
     } else {
+        sum_weights_non_quark_gluon_rejections += full_weight;
         return kFALSE;
     }
 
@@ -487,17 +512,23 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     } else if (second_jet_pdgid == 21) {
         second_jet_topo = JetTopo::Gluon;
     } else {
+        sum_weights_non_quark_gluon_rejections += full_weight;
         return kFALSE;
     }
 
     if (first_jet_topo == JetTopo::Quark && second_jet_topo == JetTopo::Quark) {
         event_topo = EventFlavorTopo::QuarkQuark;
+        sum_weights_qq += full_weight;
     } else if (first_jet_topo == JetTopo::Quark && second_jet_topo == JetTopo::Gluon) {
         event_topo = EventFlavorTopo::QuarkGluon;
+        sum_weights_qg += full_weight;
     } else if (first_jet_topo == JetTopo::Gluon && second_jet_topo == JetTopo::Quark) {
         event_topo = EventFlavorTopo::QuarkGluon;
+        sum_weights_qg += full_weight;
     } else {
+        assert(first_jet_topo == JetTopo::Gluon && second_jet_topo == JetTopo::Gluon);
         event_topo = EventFlavorTopo::GluonGluon;
+        sum_weights_gg += full_weight;
     }
 
     const bool first_jet_passed_ntrk = first_jet_ungNtrk < 30;
@@ -551,7 +582,6 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     /* FILL HISTOGRAMS */
     /*******************/
 
-    const float full_weight = weight * pileup_weight;
 
     h_dijet_mass->fill_inclusive(dijet_mass_massordered / 1000. , full_weight);
     h_dijet_mass->fill_event_topo(event_topo, dijet_mass_massordered / 1000. , full_weight);
@@ -728,11 +758,26 @@ void VVJJSelector::Terminate()
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
 
-    std::cout << num_events_total << std::endl;
-    std::cout << num_events_baseline_selection << std::endl;
-    std::cout << (float) num_events_baseline_selection / (float) num_events_total << std::endl;
+    std::cout << std::endl;
 
-    TFile output_file("histos.root", "RECREATE");
+    std::cout << "TOTAL EVENT WEIGHT PROCESSED: " << sum_weights_total << std::endl;
+
+    std::cout << "WEIGHT OF EVENTS PASSING BASELINE CUTS: " << sum_weights_baseline_selection << " ";
+    std::cout << "(" << 100 * (float) sum_weights_baseline_selection / (float) sum_weights_total << "%)" << std::endl;
+
+    std::cout << "WEIGHT OF BASELINE QUARK-QUARK EVENTS: " << sum_weights_qq << " ";
+    std::cout << "(" << 100 * (float) sum_weights_qq / (float) sum_weights_baseline_selection << "%)" << std::endl;
+
+    std::cout << "WEIGHT OF BASELINE QUARK-GLUON EVENTS: " << sum_weights_qg << " ";
+    std::cout << "(" << 100 * (float) sum_weights_qg / (float) sum_weights_baseline_selection << "%)" << std::endl;
+
+    std::cout << "WEIGHT OF BASELINE GLUON-GLUON EVENTS: " << sum_weights_gg << " ";
+    std::cout << "(" << 100 * (float) sum_weights_gg / (float) sum_weights_baseline_selection << "%)" << std::endl;
+
+    std::cout << "WEIGHT OF NON-QUARK-GLUON REJECTED EVENTS: " << sum_weights_non_quark_gluon_rejections << " ";
+    std::cout << "(" << 100 * (float) sum_weights_non_quark_gluon_rejections / (float) sum_weights_baseline_selection << "%)" << std::endl;
+
+    TFile output_file(output_path.c_str(), "RECREATE");
 
     h_first_jet_pt->write_all_histograms();
     h_first_jet_eta->write_all_histograms();

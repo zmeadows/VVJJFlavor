@@ -76,8 +76,17 @@ class VVJJSelector : public TSelector {
 
         const std::string output_path;
 
-        int num_events_total;
-        int num_events_baseline_selection;
+        UInt_t num_entries_processed;
+        Double_t next_print_percent;
+
+        Double_t sum_weights_total;
+        Double_t sum_weights_baseline_selection;
+
+        Double_t sum_weights_qq;
+        Double_t sum_weights_qg;
+        Double_t sum_weights_gg;
+
+        Double_t sum_weights_non_quark_gluon_rejections;
 
         std::unique_ptr<TH1Topo> h_first_jet_pt;
         std::unique_ptr<TH1Topo> h_first_jet_eta;
