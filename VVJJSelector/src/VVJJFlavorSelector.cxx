@@ -1,6 +1,6 @@
-#define VVJJSelector_cxx
+#define VVJJFlavorSelector_cxx
 
-#include "VVJJSelector.h"
+#include "VVJJFlavorSelector.h"
 
 #include <cassert>
 #include <sstream>
@@ -9,7 +9,7 @@
 #include <TStyle.h>
 #include <TSelector.h>
 
-VVJJSelector::VVJJSelector(std::string output_path_) :
+VVJJFlavorSelector::VVJJFlavorSelector(std::string output_path_) :
     fChain(0),
     output_path(output_path_),
     num_entries_processed(0),
@@ -24,7 +24,7 @@ VVJJSelector::VVJJSelector(std::string output_path_) :
     sum_weights_non_quark_gluon_rejections(0)
 { }
 
-void VVJJSelector::Begin(TTree * /*tree*/)
+void VVJJFlavorSelector::Begin(TTree * /*tree*/)
 {
     // The Begin() function is called at the start of the query.
     // When running with PROOF Begin() is only called on the client.
@@ -50,7 +50,7 @@ void VVJJSelector::Begin(TTree * /*tree*/)
     TString option = GetOption();
 }
 
-void VVJJSelector::SlaveBegin(TTree * /*tree*/)
+void VVJJFlavorSelector::SlaveBegin(TTree * /*tree*/)
 {
     // The SlaveBegin() function is called after the Begin() function.
     // When running with PROOF SlaveBegin() is called on each slave server.
@@ -60,12 +60,12 @@ void VVJJSelector::SlaveBegin(TTree * /*tree*/)
 
 }
 
-Bool_t VVJJSelector::Process(Long64_t entry)
+Bool_t VVJJFlavorSelector::Process(Long64_t entry)
 {
     // The Process() function is called for each entry in the tree (or possibly
     // keyed object in the case of PROOF) to be processed. The entry argument
     // specifies which entry in the currently loaded tree is to be processed.
-    // It can be passed to either VVJJSelector::GetEntry() or TBranch::GetEntry()
+    // It can be passed to either VVJJFlavorSelector::GetEntry() or TBranch::GetEntry()
     // to read either all or the required parts of the data. When processing
     // keyed objects with PROOF, the object is already loaded and is available
     // via the fObject pointer.
@@ -349,7 +349,7 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     return kTRUE;
 }
 
-void VVJJSelector::SlaveTerminate()
+void VVJJFlavorSelector::SlaveTerminate()
 {
     // The SlaveTerminate() function is called after all entries or objects
     // have been processed. When running with PROOF SlaveTerminate() is called
@@ -357,7 +357,7 @@ void VVJJSelector::SlaveTerminate()
 
 }
 
-void VVJJSelector::Terminate()
+void VVJJFlavorSelector::Terminate()
 {
     // The Terminate() function is the last function to be called during
     // a query. It always runs on the client, it can be used to present

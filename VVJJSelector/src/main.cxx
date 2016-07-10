@@ -6,7 +6,7 @@
 
 #include <TChain.h>
 
-#include "VVJJSelector.h"
+#include "VVJJFlavorSelector.h"
 
 int
 main(int argc, char** argv)
@@ -73,13 +73,13 @@ main(int argc, char** argv)
         std::cout << std::endl;
     }
 
-    // now actually process the TChains (i.e. ntuples) with the VVJJSelector
+    // now actually process the TChains (i.e. ntuples) with the VVJJFlavorSelector
     TChain* tchain_gen;
     TSelector* vvjj_selector;
 
     for (auto& x : tchains)
     {
-        vvjj_selector = new VVJJSelector(output_path);
+        vvjj_selector = new VVJJFlavorSelector(output_path);
 
         tchain_gen = x.second;
         tchain_gen->Process(vvjj_selector);

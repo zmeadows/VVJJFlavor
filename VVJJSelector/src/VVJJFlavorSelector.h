@@ -1,5 +1,5 @@
-#ifndef VVJJSelector_h
-#define VVJJSelector_h
+#ifndef VVJJFlavorSelector_h
+#define VVJJFlavorSelector_h
 
 #include <fstream>
 #include <map>
@@ -16,7 +16,7 @@
 
 #include "TH1Topo.h"
 
-class VVJJSelector : public TSelector {
+class VVJJFlavorSelector : public TSelector {
     public :
         TTree          *fChain;   //!pointer to the analyzed TTree or TChain
 
@@ -296,9 +296,9 @@ class VVJJSelector : public TSelector {
         TBranch        *b_passHLT_J460_A10R_L1J100;   //!
         TBranch        *b_passHLT_J360_A10R_L1J100;   //!
 
-        VVJJSelector(std::string output_path_);
+        VVJJFlavorSelector(std::string output_path_);
 
-        virtual ~VVJJSelector() { }
+        virtual ~VVJJFlavorSelector() { }
         virtual Int_t   Version() const { return 2; }
         virtual void    Begin(TTree *tree);
         virtual void    SlaveBegin(TTree *tree);
@@ -313,13 +313,13 @@ class VVJJSelector : public TSelector {
         virtual void    SlaveTerminate();
         virtual void    Terminate();
 
-        ClassDef(VVJJSelector,0);
+        ClassDef(VVJJFlavorSelector,0);
 };
 
 #endif
 
-#ifdef VVJJSelector_cxx
-void VVJJSelector::Init(TTree *tree)
+#ifdef VVJJFlavorSelector_cxx
+void VVJJFlavorSelector::Init(TTree *tree)
 {
     // The Init() function is called when the selector needs to initialize
     // a new tree or chain. Typically here the branch addresses and branch
@@ -455,7 +455,7 @@ void VVJJSelector::Init(TTree *tree)
     fChain->SetBranchAddress("passHLT_J360_A10R_L1J100", &passHLT_J360_A10R_L1J100, &b_passHLT_J360_A10R_L1J100);
 }
 
-Bool_t VVJJSelector::Notify()
+Bool_t VVJJFlavorSelector::Notify()
 {
     // The Notify() function is called when a new file is opened. This
     // can be either for a new TTree in a TChain or when when a new TTree
@@ -472,5 +472,5 @@ std::unique_ptr<T> make_unique( Args&& ...args )
     return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
 }
 
-#endif // #ifdef VVJJSelector_h
+#endif // #ifdef VVJJFlavorSelector_h
 

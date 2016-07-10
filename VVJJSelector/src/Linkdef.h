@@ -6,6 +6,6 @@
 #pragma link C++ nestedclass;
 
 #pragma link C++ class TH1Topo+;
-#pragma link C++ class VVJJSelector+;
+#pragma link C++ class VVJJFlavorSelector+;
 
 #endif
