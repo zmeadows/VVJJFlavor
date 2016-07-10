@@ -261,3 +261,12 @@ def divide_tgraph_asymm_errs(tgraph_num, tgraph_den):
         tgraph_ratio.SetPointError(ibin, ratio_exl, ratio_exh, ratio_y_error, ratio_y_error)
 
     return tgraph_ratio
+
+def flatten(lst):
+    result = []
+    for element in lst:
+        if hasattr(element, '__iter__'):
+            result.extend(flatten(element))
+        else:
+            result.append(element)
+    return result
