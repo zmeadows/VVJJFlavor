@@ -7,6 +7,7 @@ from sys import argv, exit
 
 from plot_base import *
 from plot_util import *
+from plot_vvjj import *
 
 RAW_INPUT_PATH = argv[1]
 OUTPUT_ROOT_DIR = argv[2]
@@ -77,10 +78,10 @@ class PlotEventQuarkGluonEfficiency(PlotBase):
             graph.GetYaxis().SetTitle(y_axis_label_str)
             graph.GetYaxis().SetTitleOffset(1.5)
             graph.GetYaxis().SetLabelOffset(0.01)
-            graph.GetXaxis().SetTitle(self.x_title + " " + x_units_str)
+            graph.GetXaxis().SetTitle(get_vvjj_axis_title(self.name) + " " + x_units_str)
 
         set_mc_style_marker(self.tgraph_qg_eff, kBlue, shape = 23, alpha = 0.8)
-        set_mc_style_marker(self.tgraph_qq_eff, kGreen, shape = 22, alpha = 0.8)
+        set_mc_style_marker(self.tgraph_qq_eff, 8, shape = 22, alpha = 0.8)
         set_mc_style_marker(self.tgraph_gg_eff, kRed, shape = 21, alpha = 0.8)
 
         self.tgraph_qg_eff.Draw("APE")
@@ -106,8 +107,8 @@ def make_qq_qg_gg_event_efficiency_plot(num_var_name, den_var_name, **kwargs):
             RAW_TFILE.Get(den_var_name + "_qg"),
             RAW_TFILE.Get(num_var_name + "_gg"),
             RAW_TFILE.Get(den_var_name + "_gg"),
-            extra_lines_loc = [0.2,0.85],
-            legend_loc = [0.74,0.92,0.94,0.80],
+            extra_lines_loc = [0.2,0.83],
+            legend_loc = [0.72,0.91,0.94,0.77],
             **kwargs)
 
 def make_dijet_eff_plot(num_var_name, **kwargs):
@@ -115,11 +116,11 @@ def make_dijet_eff_plot(num_var_name, **kwargs):
             num_var_name,
             "dijet_mass",
             name = num_var_name + "_efficiency",
-            extra_legend_lines = DEFAULT_EXTRA_LINES + [num_var_name],
+            extra_legend_lines = DEFAULT_EXTRA_LINES + [ get_vvjj_selection_tex(num_var_name) ],
             x_min = 1000,
             x_max = 2500,
             x_title = "m_{JJ}",
-            y_min = 0.0001,
+            y_min = 0.000001,
             **kwargs
             )
 
@@ -128,6 +129,9 @@ quark_gluon_plots = [
         make_dijet_eff_plot("dijet_mass_WW_partial_mass", y_max = 0.1),
         make_dijet_eff_plot("dijet_mass_WZ_partial_mass", y_max = 0.12),
         make_dijet_eff_plot("dijet_mass_ZZ_partial_mass", y_max = 0.1),
+        make_dijet_eff_plot("dijet_mass_WW_partial_D2", y_max = 0.5),
+        make_dijet_eff_plot("dijet_mass_WZ_partial_D2", y_max = 0.5),
+        make_dijet_eff_plot("dijet_mass_ZZ_partial_D2", y_max = 0.5),
         make_dijet_eff_plot("dijet_mass_WW_partial_massD2", y_max = 0.005),
         make_dijet_eff_plot("dijet_mass_WZ_partial_massD2", y_max = 0.005),
         make_dijet_eff_plot("dijet_mass_ZZ_partial_massD2", y_max = 0.005),
@@ -137,9 +141,9 @@ quark_gluon_plots = [
         make_dijet_eff_plot("dijet_mass_WW_partial_ntrkD2", y_max = 0.05),
         make_dijet_eff_plot("dijet_mass_WZ_partial_ntrkD2", y_max = 0.05),
         make_dijet_eff_plot("dijet_mass_ZZ_partial_ntrkD2", y_max = 0.05),
-        make_dijet_eff_plot("dijet_mass_WW_partial_D2", y_max = 0.5),
-        make_dijet_eff_plot("dijet_mass_WZ_partial_D2", y_max = 0.5),
-        make_dijet_eff_plot("dijet_mass_ZZ_partial_D2", y_max = 0.5),
+        make_dijet_eff_plot("dijet_mass_WW_full", y_max = 0.002),
+        make_dijet_eff_plot("dijet_mass_WZ_full", y_max = 0.002),
+        make_dijet_eff_plot("dijet_mass_ZZ_full", y_max = 0.002)
     ]
 
 for i in range(len(quark_gluon_plots)):
