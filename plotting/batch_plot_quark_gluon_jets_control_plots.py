@@ -7,6 +7,7 @@ from sys import argv, exit
 
 from plot_base import *
 from plot_util import *
+from plot_vvjj import *
 
 RAW_INPUT_PATH = argv[1]
 OUTPUT_ROOT_DIR = argv[2]
@@ -35,8 +36,8 @@ class PlotQuarkGluonControl(PlotBase):
 
         super(PlotQuarkGluonControl, self).__init__(**kwargs)
 
-        self.h_quark = h_quark
-        self.h_gluon = h_gluon
+        self.h_quark = h_quark.Clone()
+        self.h_gluon = h_gluon.Clone()
 
         # make sure the histograms exist
         if (not self.h_quark):
@@ -101,14 +102,10 @@ class PlotQuarkGluonControl(PlotBase):
             h.GetYaxis().SetTitle(y_axis_label_str)
             h.GetYaxis().SetTitleOffset(1.5)
             h.GetYaxis().SetLabelOffset(0.01)
-            h.GetXaxis().SetTitle(self.x_title + " " + x_units_str)
+            h.GetXaxis().SetTitle(get_vvjj_axis_title(self.name) + " " + x_units_str)
 
-        if normalize:
-            set_mc_style_marker(self.h_quark, kBlue, shape = 22)
-            set_mc_style_marker(self.h_gluon, kRed, shape = 23)
-        else:
-            set_mc_style_simple_hist(self.h_quark, kBlue)
-            set_mc_style_simple_hist(self.h_gluon, kRed)
+        set_mc_style_marker(self.h_quark, kBlue, shape = 22, alpha = 0.8)
+        set_mc_style_marker(self.h_gluon, kRed, shape = 23, alpha = 0.8)
 
         if normalize:
             self.h_quark.Draw("PE1")
@@ -127,7 +124,7 @@ class PlotQuarkGluonControl(PlotBase):
 
 FIRST_JET, SECOND_JET, BOTH_JETS = range(3)
 
-def make_quark_gluon_jets_control_plot(var_name, which_jet, **kwargs):
+def make_quark_gluon_jet_control_plot(var_name, which_jet, **kwargs):
     h_q1 = RAW_TFILE.Get("first_" + var_name + "_q")
     h_q2 = RAW_TFILE.Get("second_" + var_name + "_q")
 
@@ -153,78 +150,83 @@ def make_quark_gluon_jets_control_plot(var_name, which_jet, **kwargs):
     return PlotQuarkGluonControl(
             h_q,
             h_g,
-            extra_legend_lines = [ "Pythia 8 QCD dijet" ],
-            extra_lines_loc = [0.2,0.85],
+            extra_lines_loc = [0.2,0.83],
             legend_loc = [0.74,0.92,0.94,0.82],
+            extra_legend_lines = [ "Pythia 8 QCD dijet" ],
             **kwargs)
 
-quark_gluon_plots = [
-        make_quark_gluon_jets_control_plot(
-            "jet_m",
-            BOTH_JETS,
-            x_min = 50,
-            x_max = 200,
-            name = "both_jets_mass",
-            empty_scale = 1.5,
-            x_title = "Leading jet mass"
-            ),
-
-        make_quark_gluon_jets_control_plot(
-            "jet_ntrk",
-            BOTH_JETS,
-            name = "both_jets_ntrk",
-            empty_scale = 1.6,
-            x_max = 80,
-            x_title = "Leading jet ntrk"
-            ),
-
-        make_quark_gluon_jets_control_plot(
-            "jet_D2",
-            BOTH_JETS,
-            name = "both_jets_D2",
-            empty_scale = 1.5,
-            x_title = "Leading jet mass"
-            )
+def make_first_jet_control_plot(var_name, **kwargs):
+    return [
+        make_quark_gluon_jet_control_plot( var_name, FIRST_JET,
+            name = "first_" + var_name + "_lumi_normalized", **kwargs),
+        make_quark_gluon_jet_control_plot( var_name, FIRST_JET,
+            name = "first_" + var_name + "_area_normalized", normalize = True, **kwargs)
         ]
 
-for i in range(len(quark_gluon_plots)):
-    quark_gluon_plots[i].print_to_file(OUTPUT_DIR + "/" + quark_gluon_plots[i].name + ".pdf")
-
-quark_gluon_plots = []
-
-quark_gluon_plots_normalized = [
-        make_quark_gluon_jets_control_plot(
-            "jet_m",
-            BOTH_JETS,
-            normalize = True,
-            x_min = 50,
-            x_max = 200,
-            name = "both_jets_mass_normalized",
-            empty_scale = 1.5,
-            x_title = "Leading jet mass"
-            ),
-
-        make_quark_gluon_jets_control_plot(
-            "jet_ntrk",
-            BOTH_JETS,
-            normalize = True,
-            name = "both_jets_ntrk_normalized",
-            empty_scale = 1.6,
-            x_max = 80,
-            x_title = "Leading jet ntrk"
-            ),
-
-        make_quark_gluon_jets_control_plot(
-            "jet_D2",
-            BOTH_JETS,
-            normalize = True,
-            name = "both_jets_D2_normalized",
-            empty_scale = 1.5,
-            x_title = "Leading jet mass"
-            )
+def make_second_jet_control_plot(var_name, **kwargs):
+    return [
+        make_quark_gluon_jet_control_plot( var_name, SECOND_JET,
+            name = "second_" + var_name + "_lumi_normalized", **kwargs),
+        make_quark_gluon_jet_control_plot( var_name, SECOND_JET,
+            name = "second_" + var_name + "_area_normalized", normalize = True, **kwargs),
         ]
 
-for i in range(len(quark_gluon_plots_normalized)):
-    quark_gluon_plots_normalized[i].print_to_file(
-            OUTPUT_DIR + "/" + quark_gluon_plots_normalized[i].name + ".pdf")
+def make_both_jets_control_plot(var_name, **kwargs):
+    return [
+        make_quark_gluon_jet_control_plot( var_name, BOTH_JETS,
+            name = "both_" + var_name + "_lumi_normalized", **kwargs),
+        make_quark_gluon_jet_control_plot( var_name, BOTH_JETS,
+            name = "both_" + var_name + "_area_normalized", normalize = True, **kwargs)
+	]
 
+def make_all_jet_control_plots(var_name, **kwargs):
+    plots = []
+    plots.append(make_first_jet_control_plot(var_name, **kwargs))
+    plots.append(make_second_jet_control_plot(var_name, **kwargs))
+    plots.append(make_both_jets_control_plot(var_name, **kwargs))
+    return flatten(plots)
+
+quark_gluon_jet_plots = flatten([
+        make_all_jet_control_plots(
+            "jet_m",
+            x_min = 50,
+            x_max = 200,
+            empty_scale = 1.5,
+            ),
+
+        make_all_jet_control_plots(
+            "jet_ntrk",
+            x_units = "",
+            empty_scale = 1.6,
+            x_max = 80,
+            ),
+
+        make_all_jet_control_plots(
+            "jet_D2",
+            x_units = "",
+            empty_scale = 1.5,
+            ),
+
+        make_all_jet_control_plots(
+            "jet_phi",
+            empty_scale = 1.5,
+            x_units = "rad",
+            ),
+
+        make_all_jet_control_plots(
+            "jet_eta",
+            empty_scale = 1.5,
+            x_units = "",
+            ),
+
+        make_all_jet_control_plots(
+            "jet_pt",
+            empty_scale = 1.5,
+            log_scale = True,
+            x_min = 500,
+            x_max = 2500
+            )
+        ])
+
+for i in range(len(quark_gluon_jet_plots)):
+    quark_gluon_jet_plots[i].print_to_file(OUTPUT_DIR + "/" + quark_gluon_jet_plots[i].name + ".pdf")
