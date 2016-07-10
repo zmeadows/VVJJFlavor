@@ -3,6 +3,7 @@
 #include "VVJJSelector.h"
 
 #include <cassert>
+#include <sstream>
 
 #include <TH1F.h>
 #include <TStyle.h>
@@ -346,6 +347,8 @@ VVJJSelector::VVJJSelector(std::string output_path_) :
     sum_weights_qq(0),
     sum_weights_qg(0),
     sum_weights_gg(0),
+    sum_weights_qg_firstjet_quark(0),
+    sum_weights_qg_firstjet_gluon(0),
     sum_weights_non_quark_gluon_rejections(0)
 { }
 
@@ -410,14 +413,12 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     double percent_done = 100 * (float) num_entries_processed / (float) this->fChain->GetEntries();
     if (percent_done >= next_print_percent) {
         std::cout << next_print_percent << "%..." << std::flush;
-
         if (percent_done == 100.0) {
             std::cout << "DONE." << std::endl;
         } else {
             next_print_percent += 10.0;
         }
     }
-
 
     b_weight->GetEntry(entry);
     b_pileup_weight->GetEntry(entry);
@@ -467,11 +468,11 @@ Bool_t VVJJSelector::Process(Long64_t entry)
     if (first_jet_pt / 1000. <= 450
             || first_jet_m / 1000. <= 50
             || second_jet_m / 1000. <= 50
-            || first_jet_eta >= 2.0
-            || second_jet_eta >= 2.0
+            || std::abs(first_jet_eta) >= 2.0
+            || std::abs(second_jet_eta) >= 2.0
             || dijet_mass_massordered / 1000 <= 1000
-            || dyjj >= 1.2
-            || ptasym >= 0.15
+            || std::abs(dyjj) >= 1.2
+            || std::abs(ptasym) >= 0.15
             ) return kFALSE;
 
     sum_weights_baseline_selection += full_weight;
@@ -532,6 +533,15 @@ Bool_t VVJJSelector::Process(Long64_t entry)
         assert(first_jet_topo == JetTopo::Gluon && second_jet_topo == JetTopo::Gluon);
         event_topo = EventFlavorTopo::GluonGluon;
         sum_weights_gg += full_weight;
+    }
+
+    if (event_topo == EventFlavorTopo::QuarkGluon) {
+        if (first_jet_topo == JetTopo::Quark) {
+            sum_weights_qg_firstjet_quark += full_weight;
+        } else {
+            assert(first_jet_topo == JetTopo::Gluon);
+            sum_weights_qg_firstjet_gluon += full_weight;
+        }
     }
 
     first_jet_tag_map["partial_ntrk"]       = first_jet_passedNtrk;
@@ -648,16 +658,20 @@ Bool_t VVJJSelector::Process(Long64_t entry)
 
     for (auto const& tag : event_tag_map) {
         h_dijet_mass->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
-        h_first_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
-        h_second_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, dijet_mass_massordered / 1000., full_weight);
+        h_first_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, first_jet_pt / 1000., full_weight);
+        h_second_jet_pt->fill_event_topo_tagged(event_topo, tag.first, tag.second, second_jet_pt / 1000., full_weight);
+        h_first_jet_m->fill_event_topo_tagged(event_topo, tag.first, tag.second, first_jet_m / 1000., full_weight);
+        h_second_jet_m->fill_event_topo_tagged(event_topo, tag.first, tag.second, second_jet_m / 1000., full_weight);
     }
 
     for (auto const& tag : first_jet_tag_map) {
         h_first_jet_pt->fill_jet_topo_tagged(first_jet_topo, tag.first, tag.second, first_jet_pt / 1000., full_weight);
+        h_first_jet_m->fill_jet_topo_tagged(first_jet_topo, tag.first, tag.second, first_jet_m / 1000., full_weight);
     }
 
     for (auto const& tag : second_jet_tag_map) {
         h_second_jet_pt->fill_jet_topo_tagged(second_jet_topo, tag.first, tag.second, second_jet_pt / 1000., full_weight);
+        h_second_jet_m->fill_jet_topo_tagged(second_jet_topo, tag.first, tag.second, second_jet_m / 1000., full_weight);
     }
 
     return kTRUE;
@@ -677,24 +691,43 @@ void VVJJSelector::Terminate()
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
 
+    auto print_percent = [] (Double_t numerator, Double_t denomenator) {
+        Double_t percent = 100.0 * numerator / denomenator;
+
+        std::stringstream ss;
+        ss.precision(4);
+
+        ss << std::fixed << numerator << " (" << percent << "%)";
+
+        std::cout << ss.str() << std::endl;
+    };
+
     std::cout << std::endl;
 
     std::cout << "TOTAL EVENT WEIGHT PROCESSED: " << sum_weights_total << std::endl;
 
-    std::cout << "WEIGHT OF EVENTS PASSING BASELINE CUTS: " << sum_weights_baseline_selection << " ";
-    std::cout << "(" << 100 * (float) sum_weights_baseline_selection / (float) sum_weights_total << "%)" << std::endl;
+    std::cout << "WEIGHT OF EVENTS PASSING BASELINE CUTS: ";
+    print_percent(sum_weights_baseline_selection, sum_weights_total);
 
-    std::cout << "WEIGHT OF BASELINE QUARK-QUARK EVENTS: " << sum_weights_qq << " ";
-    std::cout << "(" << 100 * (float) sum_weights_qq / (float) sum_weights_baseline_selection << "%)" << std::endl;
+    std::cout << "WEIGHT OF BASELINE QUARK-QUARK EVENTS: ";
+    print_percent(sum_weights_qq, sum_weights_baseline_selection);
 
-    std::cout << "WEIGHT OF BASELINE QUARK-GLUON EVENTS: " << sum_weights_qg << " ";
-    std::cout << "(" << 100 * (float) sum_weights_qg / (float) sum_weights_baseline_selection << "%)" << std::endl;
+    std::cout << "WEIGHT OF BASELINE QUARK-GLUON EVENTS: ";
+    print_percent(sum_weights_qg, sum_weights_baseline_selection);
 
-    std::cout << "WEIGHT OF BASELINE GLUON-GLUON EVENTS: " << sum_weights_gg << " ";
-    std::cout << "(" << 100 * (float) sum_weights_gg / (float) sum_weights_baseline_selection << "%)" << std::endl;
+    std::cout << "WEIGHT OF BASELINE GLUON-GLUON EVENTS: ";
+    print_percent(sum_weights_gg, sum_weights_baseline_selection);
 
-    std::cout << "WEIGHT OF NON-QUARK-GLUON REJECTED EVENTS: " << sum_weights_non_quark_gluon_rejections << " ";
-    std::cout << "(" << 100 * (float) sum_weights_non_quark_gluon_rejections / (float) sum_weights_baseline_selection << "%)" << std::endl;
+    std::cout << "WEIGHT OF NON-QUARK-GLUON REJECTED EVENTS: ";
+    print_percent(sum_weights_non_quark_gluon_rejections, sum_weights_baseline_selection);
+
+    std::cout << std::endl;
+
+    std::cout << "IN BASELINE QUARK-GLUON EVENTS:" << std::endl;
+    std::cout << "\t" << "WEIGHT OF QUARK-INITIATED LEADING JET EVENTS: ";
+    print_percent(sum_weights_qg_firstjet_quark, sum_weights_qg);
+    std::cout << "\t" << "WEIGHT OF GLUON-INITIATED LEADING JET EVENTS: ";
+    print_percent(sum_weights_qg_firstjet_gluon, sum_weights_qg);
 
     TFile output_file(output_path.c_str(), "RECREATE");
 

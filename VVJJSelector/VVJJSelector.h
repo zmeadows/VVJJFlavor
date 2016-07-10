@@ -81,10 +81,12 @@ class VVJJSelector : public TSelector {
 
         Double_t sum_weights_total;
         Double_t sum_weights_baseline_selection;
-
         Double_t sum_weights_qq;
         Double_t sum_weights_qg;
         Double_t sum_weights_gg;
+
+        Double_t sum_weights_qg_firstjet_quark;
+        Double_t sum_weights_qg_firstjet_gluon;
 
         Double_t sum_weights_non_quark_gluon_rejections;
 
