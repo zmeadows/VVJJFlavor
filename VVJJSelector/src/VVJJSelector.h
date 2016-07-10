@@ -14,61 +14,7 @@
 #include <TH1F.h>
 #include <TSelector.h>
 
-enum class EventFlavorTopo {
-    QuarkQuark,
-    QuarkGluon,
-    GluonGluon
-};
-
-enum class JetTopo {
-    Quark,
-    Gluon
-};
-
-class TH1Topo {
-    private:
-        TH1F* h_inclusive;
-        TH1F* h_q;
-        TH1F* h_g;
-        TH1F* h_qq;
-        TH1F* h_qg;
-        TH1F* h_gg;
-
-        std::unordered_map<std::string, TH1F*> hs_inclusive_tagged;
-        std::unordered_map<std::string, TH1F*> hs_q_tagged;
-        std::unordered_map<std::string, TH1F*> hs_g_tagged;
-        std::unordered_map<std::string, TH1F*> hs_qq_tagged;
-        std::unordered_map<std::string, TH1F*> hs_qg_tagged;
-        std::unordered_map<std::string, TH1F*> hs_gg_tagged;
-
-    public:
-        TH1Topo(std::string var_name_, float x_min_, float x_max_, float bin_spacing_);
-        virtual ~TH1Topo(void);
-
-        const std::string var_name;
-        const float x_min;
-        const float x_max;
-        const float bin_spacing;
-        const int num_bins;
-
-        void fill_inclusive(float val, float weight);
-        void fill_inclusive_tagged(std::string tag_name, bool tag_condition,
-                float val, float weight);
-
-        void fill_event_topo(EventFlavorTopo event_topo, float val, float weight);
-        void fill_event_topo_tagged(EventFlavorTopo event_topo, std::string tag_name,
-                bool tag_condition, float val, float weight);
-
-        void fill_jet_topo(JetTopo jet_topo, float val, float weight);
-        void fill_jet_topo_tagged(JetTopo jet_topo, std::string tag_name, bool tag_condition,
-                float val, float weight);
-
-        void write_all_histograms(void) const;
-
-        ClassDef(TH1Topo, 0);
-};
-
-void RunVVJJSelector(std::string input_path, std::string output_path);
+#include "TH1Topo.h"
 
 class VVJJSelector : public TSelector {
     public :
@@ -84,10 +30,8 @@ class VVJJSelector : public TSelector {
         Double_t sum_weights_qq;
         Double_t sum_weights_qg;
         Double_t sum_weights_gg;
-
         Double_t sum_weights_qg_firstjet_quark;
         Double_t sum_weights_qg_firstjet_gluon;
-
         Double_t sum_weights_non_quark_gluon_rejections;
 
         std::unordered_map<std::string, bool> event_tag_map;
@@ -522,11 +466,11 @@ Bool_t VVJJSelector::Notify()
     return kTRUE;
 }
 
-    template<typename T, typename ...Args>
+template<typename T, typename ...Args>
 std::unique_ptr<T> make_unique( Args&& ...args )
 {
     return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
 }
 
-#endif // #ifdef VVJJSelector_cxx
+#endif // #ifdef VVJJSelector_h
 
