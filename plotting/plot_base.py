@@ -69,7 +69,7 @@ class PlotBase(object):
             assert(len(legend_loc) == 4)
             self.legend_loc = legend_loc
 
-        self.atlas_loc = [0.2,0.90] if (width == 800) else [0.2,0.90]
+        self.atlas_loc = [0.2,0.88] if (width == 800) else [0.2,0.90]
         if (atlas_loc):
             assert(len(atlas_loc) == 2)
             self.atlas_loc = atlas_loc
