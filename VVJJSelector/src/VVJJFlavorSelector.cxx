@@ -30,22 +30,25 @@ void VVJJFlavorSelector::Begin(TTree * /*tree*/)
     // When running with PROOF Begin() is only called on the client.
     // The tree argument is deprecated (on PROOF 0 is passed).
 
-    h_first_jet_pt   = make_unique<TH1Topo>("first_jet_pt"   , 0.   , 4000. , 100);
-    h_first_jet_eta  = make_unique<TH1Topo>("first_jet_eta"  , -2.5 , 2.5   , 0.2);
-    h_first_jet_phi  = make_unique<TH1Topo>("first_jet_phi"  , -3.2 , 3.2   , 0.2);
-    h_first_jet_m    = make_unique<TH1Topo>("first_jet_m"    , 0.   , 400.  , 10.0);
-    h_first_jet_D2   = make_unique<TH1Topo>("first_jet_D2"   , 0.   , 5.    , 0.2);
-    h_first_jet_ungNtrk = make_unique<TH1Topo>("first_jet_ntrk" , 0.   , 100.  , 2.0);
+    h_first_jet_pt  = make_unique<TH1Topo>("first_jet_pt"  , 0. , 4000. , 100);
+    h_second_jet_pt = make_unique<TH1Topo>("second_jet_pt" , 0. , 4000. , 100);
 
-    h_second_jet_pt   = make_unique<TH1Topo>("second_jet_pt"   , 0.   , 4000. , 100);
-    h_second_jet_eta  = make_unique<TH1Topo>("second_jet_eta"  , -2.5 , 2.5   , 0.2);
-    h_second_jet_phi  = make_unique<TH1Topo>("second_jet_phi"  , -3.2 , 3.2   , 0.2);
-    h_second_jet_m    = make_unique<TH1Topo>("second_jet_m"    , 0.   , 400.  , 10.0);
-    h_second_jet_D2   = make_unique<TH1Topo>("second_jet_D2"   , 0.   , 5.    , 0.2);
-    h_second_jet_ungNtrk = make_unique<TH1Topo>("second_jet_ntrk" , 0.   , 100.  , 2.0);
+    h_first_jet_eta  = make_unique<TH1Topo>("first_jet_eta"  , -2.5 , 2.5 , 0.2);
+    h_second_jet_eta = make_unique<TH1Topo>("second_jet_eta" , -2.5 , 2.5 , 0.2);
+
+    h_first_jet_phi  = make_unique<TH1Topo>("first_jet_phi"  , -3.2 , 3.2 , 0.2);
+    h_second_jet_phi = make_unique<TH1Topo>("second_jet_phi" , -3.2 , 3.2 , 0.2);
+
+    h_first_jet_m  = make_unique<TH1Topo>("first_jet_m"  , 0. , 400. , 10.0);
+    h_second_jet_m = make_unique<TH1Topo>("second_jet_m" , 0. , 400. , 10.0);
+
+    h_first_jet_D2  = make_unique<TH1Topo>("first_jet_D2"  , 0. , 5. , 0.2);
+    h_second_jet_D2 = make_unique<TH1Topo>("second_jet_D2" , 0. , 5. , 0.2);
+
+    h_first_jet_ungNtrk  = make_unique<TH1Topo>("first_jet_ntrk"  , 0. , 100. , 2.0);
+    h_second_jet_ungNtrk = make_unique<TH1Topo>("second_jet_ntrk" , 0. , 100. , 2.0);
 
     h_dijet_mass = make_unique<TH1Topo>("dijet_mass" , 0. , 8000. , 100);
-
 
     TString option = GetOption();
 }
@@ -217,6 +220,7 @@ Bool_t VVJJFlavorSelector::Process(Long64_t entry)
     }
 
     first_jet_tag_map["partial_ntrk"]       = first_jet_passedNtrk;
+
     first_jet_tag_map["W_partial_mass"]     = first_jet_passedWMassCut;
     first_jet_tag_map["W_partial_D2"]       = first_jet_passedWSubstructure;
     first_jet_tag_map["W_partial_massD2"]   = first_jet_passedWSubstructure  && first_jet_passedWMassCut;
@@ -232,6 +236,7 @@ Bool_t VVJJFlavorSelector::Process(Long64_t entry)
     first_jet_tag_map["Z_full"]             = first_jet_passedZSubstructure  && first_jet_passedZMassCut  && first_jet_passedNtrk;
 
     second_jet_tag_map["partial_ntrk"]       = second_jet_passedNtrk;
+
     second_jet_tag_map["W_partial_mass"]     = second_jet_passedWMassCut;
     second_jet_tag_map["W_partial_D2"]       = second_jet_passedWSubstructure;
     second_jet_tag_map["W_partial_massD2"]   = second_jet_passedWSubstructure  && second_jet_passedWMassCut;
