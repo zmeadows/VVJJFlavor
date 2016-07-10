@@ -7,6 +7,7 @@ from sys import argv, exit
 
 from plot_base import *
 from plot_util import *
+from plot_vvjj import *
 
 RAW_INPUT_PATH = argv[1]
 OUTPUT_ROOT_DIR = argv[2]
@@ -117,7 +118,7 @@ class PlotEventQuarkGluonControl(PlotBase):
             h.GetYaxis().SetTitle(y_axis_label_str)
             h.GetYaxis().SetTitleOffset(1.5)
             h.GetYaxis().SetLabelOffset(0.01)
-            h.GetXaxis().SetTitle(self.x_title + " " + x_units_str)
+            h.GetXaxis().SetTitle(get_vvjj_axis_title(self.name) + " " + x_units_str)
 
         if normalize:
             set_mc_style_marker(self.h_qg, kBlue, shape = 23, alpha = 0.8)
@@ -152,16 +153,15 @@ def make_quark_gluon_event_control_plot(var_name, **kwargs):
             RAW_TFILE.Get(var_name + "_qq"),
             RAW_TFILE.Get(var_name + "_qg"),
             RAW_TFILE.Get(var_name + "_gg"),
-            extra_lines_loc = [0.2,0.85],
+            extra_lines_loc = [0.2,0.83],
             legend_loc = [0.74,0.92,0.94,0.80],
             **kwargs)
 
 def make_dijet_control_plot(var_name, **kwargs):
-    print kwargs
     return make_quark_gluon_event_control_plot(
         var_name,
         empty_scale = 5.0,
-        extra_legend_lines = DEFAULT_EXTRA_LINES + [var_name],
+        extra_legend_lines = DEFAULT_EXTRA_LINES + [get_vvjj_selection_tex(var_name)],
         log_scale = True,
         x_min = 1000,
         x_max = 3500,
